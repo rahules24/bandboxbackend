@@ -20,11 +20,17 @@ RUN set -ex && \
     pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt && \
     rm -rf /root/.cache/
+
 COPY . /code
 
 ENV SECRET_KEY "qmKuRS0ulu5mx9Mrj9HwsXbNEORAcYGCb8p7q2ndcbb8uGcgsf"
+
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-CMD ["gunicorn","--bind",":8000","--workers","2","bbdBackend.wsgi"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["gunicorn", "bandboxbackend.wsgi:application", "--bind", "0.0.0.0:8000"]

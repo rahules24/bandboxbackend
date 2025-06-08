@@ -1,1 +1,1 @@
-web: gunicorn bbdBackend.wsgi
+web: gunicorn bandboxbackend.wsgi
