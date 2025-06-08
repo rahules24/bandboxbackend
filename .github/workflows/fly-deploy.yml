@@ -8,16 +8,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    concurrency: deploy-group  # optional: prevents simultaneous deploys
+    concurrency: deploy-group  # optional
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Authenticate Fly.io CLI
-        run: flyctl auth login --access-token ${{ secrets.FLY_API_TOKEN }}
-
       - name: Setup flyctl CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Authenticate Fly.io CLI
+        run: flyctl auth login --access-token ${{ secrets.FLY_API_TOKEN }}
 
       - name: Deploy app
         run: flyctl deploy --remote-only
