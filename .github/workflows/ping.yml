@@ -1,0 +1,12 @@
+name: Keep Fly Alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # every 10 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl Fly App
+        run: curl -s https://<your-app>.fly.dev/
