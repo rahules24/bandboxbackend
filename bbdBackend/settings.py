@@ -23,11 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-r7(q#pa^r1(st%tp38vww*&wj14+tq4wjyto00hc&=ajlwyezd"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']  # OR your fly.dev domain
-
+DEBUG = False
+ALLOWED_HOSTS = ["bandboxbackend.fly.dev"]
 
 # Application definition
 
