@@ -11,6 +11,7 @@ console_command = '/code/manage.py shell'
 
 [deploy]
   release_command = 'python manage.py migrate --noinput'
+  max_parallel = 1
 
 [env]
   PORT = '8000'

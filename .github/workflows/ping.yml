@@ -2,7 +2,7 @@ name: Keep Fly Alive
 
 on:
   schedule:
-    - cron: "*/10 * * * *"  # every 10 minutes
+    - cron: "* * * * *"
 
 jobs:
   ping:
