@@ -1,18 +1,25 @@
-# See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
-
 name: Fly Deploy
+
 on:
   push:
     branches:
       - master
+
 jobs:
   deploy:
-    name: Deploy app
     runs-on: ubuntu-latest
-    concurrency: deploy-group    # optional: ensure only one action runs at a time
+    concurrency: deploy-group  # optional: prevents simultaneous deploys
+
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
+
+      - name: Authenticate Fly.io CLI
+        run: flyctl auth login --access-token ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Setup flyctl CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy app
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
