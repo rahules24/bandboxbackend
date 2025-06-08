@@ -1,6 +1,3 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.db
-.env
+fly.toml
+.git/
+*.sqlite3

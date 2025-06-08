@@ -1,15 +1,30 @@
-FROM python:3.11
+ARG PYTHON_VERSION=3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+FROM python:${PYTHON_VERSION}
 
-WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# install psycopg2 dependencies.
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+RUN mkdir -p /code
 
+WORKDIR /code
+
+COPY requirements.txt /tmp/requirements.txt
+RUN set -ex && \
+    pip install --upgrade pip && \
+    pip install -r /tmp/requirements.txt && \
+    rm -rf /root/.cache/
+COPY . /code
+
+ENV SECRET_KEY "qmKuRS0ulu5mx9Mrj9HwsXbNEORAcYGCb8p7q2ndcbb8uGcgsf"
 RUN python manage.py collectstatic --noinput
 
-CMD gunicorn bbdBackend.wsgi:application --bind 0.0.0.0:$PORT
+EXPOSE 8000
+
+CMD ["gunicorn","--bind",":8000","--workers","2","bbdBackend.wsgi"]
