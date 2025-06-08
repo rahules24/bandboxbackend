@@ -4,3 +4,4 @@ gunicorn
 whitenoise
 psycopg2-binary
 django-cors-headers
+django_ratelimit
