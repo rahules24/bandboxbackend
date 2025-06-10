@@ -9,4 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Curl Fly App
-        run: curl -s https://<your-app>.fly.dev/
+        run: curl -s https://bandboxbackend.fly.dev
