@@ -7,8 +7,9 @@ console_command = '/code/manage.py shell'
 [build]
 
 [deploy]
-  release_command = 'sh -c "python manage.py migrate --noinput"'
+  release_command = '/bin/bash -c "python manage.py migrate --noinput"'
   max_parallel = 1
+  override_entrypoint = true
 
 [env]
   PORT = '8000'
