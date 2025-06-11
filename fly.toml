@@ -1,7 +1,4 @@
-# fly.toml app configuration file generated for bandboxbackend-divine-moon-6859 on 2025-06-09T00:58:01+05:30
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# fly.toml app configuration file for bandboxbackend
 
 app = 'bandboxbackend'
 primary_region = 'bom'
@@ -10,7 +7,7 @@ console_command = '/code/manage.py shell'
 [build]
 
 [deploy]
-  release_command = 'python manage.py migrate --noinput'
+  release_command = 'sh -c "python manage.py migrate --noinput"'
   max_parallel = 1
 
 [env]
