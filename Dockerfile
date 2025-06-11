@@ -1,36 +1,27 @@
-ARG PYTHON_VERSION=3.12-slim
+# Use official Python image
+FROM python:3.12-slim
 
-FROM python:${PYTHON_VERSION}
-
+# Set environment vars
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# install psycopg2 dependencies.
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /code
-
+# Set working directory
 WORKDIR /code
 
-COPY requirements.txt /tmp/requirements.txt
-RUN set -ex && \
-    pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt && \
-    rm -rf /root/.cache/
+# Install dependencies
+COPY requirements.txt /code/
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /code
+# Copy project files
+COPY . /code/
 
-ENV SECRET_KEY "qmKuRS0ulu5mx9Mrj9HwsXbNEORAcYGCb8p7q2ndcbb8uGcgsf"
+# Run collectstatic during build (optional)
+# RUN python manage.py collectstatic --noinput
 
-RUN python manage.py collectstatic --noinput
+# Entrypoint and CMD
+COPY entrypoint.sh /code/entrypoint.sh
+RUN chmod +x /code/entrypoint.sh
+ENTRYPOINT ["/code/entrypoint.sh"]
 
-EXPOSE 8000
-
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+# Default command
 CMD ["gunicorn", "bbdBackend.wsgi:application", "--bind", "0.0.0.0:8000"]
