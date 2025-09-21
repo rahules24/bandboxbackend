@@ -22,7 +22,7 @@ RUN set -ex && \
     rm -rf /root/.cache/
 COPY . /code
 
-ENV SECRET_KEY "8CMXrv26ctBv2fvSvc2L3RIe8DKumw7sL3wQneO2Me4y8Nk3Zv9pKDh20xHe3Ylx"
+ENV SECRET_KEY "9tosJL1OMbjqwC78PG93DGYrAHnApibj1EqMDWIXrsbO2tKTFq"
 
 EXPOSE 8000
 
