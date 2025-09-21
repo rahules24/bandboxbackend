@@ -22,8 +22,6 @@ RUN set -ex && \
     rm -rf /root/.cache/
 COPY . /code
 
-ENV SECRET_KEY "9tosJL1OMbjqwC78PG93DGYrAHnApibj1EqMDWIXrsbO2tKTFq"
-
 EXPOSE 8000
 
 CMD ["gunicorn","--bind",":8000","--workers","2","bbdBackend.wsgi"]
