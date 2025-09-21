@@ -18,4 +18,10 @@ class BillCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'Bill created successfully!'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Log detailed validation errors for debugging
+            logger.error(f"Validation errors: {serializer.errors}")
+            return Response({
+                'error': 'Validation failed',
+                'details': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
