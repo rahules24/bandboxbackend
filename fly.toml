@@ -1,4 +1,7 @@
-# fly.toml app configuration file for bandboxbackend
+# fly.toml app configuration file generated for bandboxbackend on 2025-09-22T03:11:54+05:30
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
 app = 'bandboxbackend'
 primary_region = 'bom'
@@ -7,9 +10,7 @@ console_command = '/code/manage.py shell'
 [build]
 
 [deploy]
-  release_command = '/bin/bash -c "python manage.py migrate --noinput"'
-  max_parallel = 1
-  override_entrypoint = true
+  release_command = 'python manage.py migrate --noinput'
 
 [env]
   PORT = '8000'
