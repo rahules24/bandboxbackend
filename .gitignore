@@ -3,11 +3,31 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Cython build artifacts
+*.c
+*.cpp
+*.so
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+MANIFEST
+
 # Django-specific
 *.log
 db.sqlite3
 *.pot
-*.pyc
+
+# Testing / coverage
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
 
 # Env files
 .env
@@ -16,6 +36,6 @@ env/
 venv/
 ENV/
 
-# VSCode or PyCharm settings (if using)
+# IDE / editor settings
 .vscode/
 .idea/
