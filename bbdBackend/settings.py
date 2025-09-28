@@ -21,9 +21,9 @@ DEBUG = env.bool("DEBUG", default=False)
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
 
-ALLOWED_HOSTS = ["bandboxbackend.fly.dev", "127.0.0.1"]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1"])
 
-CSRF_TRUSTED_ORIGINS = ["https://bandboxbackend.fly.dev"]
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -111,8 +111,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CORS configuration
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 
 # Logging configuration
 LOGGING = {
