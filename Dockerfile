@@ -20,12 +20,8 @@ RUN set -ex && \
     pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt && \
     rm -rf /root/.cache/
-
-COPY wait-for-db.sh /wait-for-db.sh
-RUN chmod +x /wait-for-db.sh
-
 COPY . /code
 
 EXPOSE 8000
 
-CMD ["/wait-for-db.sh", "bandboxdb.internal", "gunicorn","--bind",":8000","--workers","2","bbdBackend.wsgi"]
+CMD ["gunicorn","--bind",":8000","--workers","2","bbdBackend.wsgi"]
