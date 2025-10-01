@@ -22,6 +22,7 @@ from django.shortcuts import redirect
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/bills/', include('Bills.urls')),
+    path('api/contact/', include('Contact.urls')),
     path('', lambda request: redirect('/api/bills/')),
 
 ]

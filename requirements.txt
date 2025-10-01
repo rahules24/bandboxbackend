@@ -7,3 +7,4 @@ django-cors-headers
 django_ratelimit
 dj-database-url
 django-environ
+requests
