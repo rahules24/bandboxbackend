@@ -8,6 +8,7 @@ import logging
 import requests
 import os
 from decimal import Decimal
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class BillCreateView(APIView):
     
     def send_whatsapp_notification(self, bill):
         """
-        Send WhatsApp notification to customer when bill is created
+        Send WhatsApp notification to customer when bill is created using template
         """
         try:
             logger.info(f"🚀 Starting WhatsApp notification for bill {bill.slip_no}")
@@ -60,8 +61,9 @@ class BillCreateView(APIView):
             # Get WhatsApp credentials
             whatsapp_token = os.getenv('WHATSAPP_ACCESS_TOKEN')
             phone_number_id = os.getenv('WHATSAPP_PHONE_NUMBER_ID')
+            template_name = os.getenv('WHATSAPP_TEMPLATE_NAME', 'order_slip')  # Using order_slip template with button
             
-            logger.info(f"📋 Token present: {bool(whatsapp_token)}, Phone ID: {phone_number_id}")
+            logger.info(f"📋 Token present: {bool(whatsapp_token)}, Phone ID: {phone_number_id}, Template: {template_name}")
             
             if not all([whatsapp_token, phone_number_id]):
                 logger.error("❌ WhatsApp credentials not configured in .env")
@@ -74,9 +76,9 @@ class BillCreateView(APIView):
             )
             logger.info(f"💰 Total amount calculated: ₹{total_amount}")
             
-            # Format message
-            message = self._format_bill_message(bill, total_amount)
-            logger.info(f"✉️ Message formatted, length: {len(message)} chars")
+            # Format items list for template
+            items_text = self._format_items_list(bill)
+            logger.info(f"✉️ Items formatted")
             
             # Customer's phone number (from bill)
             customer_phone = bill.phone
@@ -99,15 +101,60 @@ class BillCreateView(APIView):
                 "Content-Type": "application/json"
             }
             
+            # Build template payload with NAMED parameters
             payload = {
                 "messaging_product": "whatsapp",
                 "to": customer_phone,
-                "type": "text",
-                "text": {
-                    "body": message
+                "type": "template",
+                "template": {
+                    "name": template_name,
+                    "language": {"code": "en"},
+                    "components": [
+                        {
+                            "type": "header",
+                            "parameters": [
+                                {
+                                    "type": "text",
+                                    "parameter_name": "order_id",
+                                    "text": str(bill.slip_no)
+                                }
+                            ]
+                        },
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {
+                                    "type": "text",
+                                    "parameter_name": "order_date",
+                                    "text": bill.date.strftime('%d-%b-%Y')
+                                },
+                                {
+                                    "type": "text",
+                                    "parameter_name": "due_date",
+                                    "text": bill.due_date.strftime('%d-%b-%Y')
+                                },
+                                {
+                                    "type": "text",
+                                    "parameter_name": "address",
+                                    "text": str(bill.address) if bill.address else "N/A"
+                                },
+                                {
+                                    "type": "text",
+                                    "parameter_name": "order_items",
+                                    "text": items_text if items_text else "No items"
+                                },
+                                {
+                                    "type": "text",
+                                    "parameter_name": "amount",
+                                    "text": str(total_amount) if total_amount else "0"
+                                }
+                            ]
+                        }
+                    ]
                 }
             }
-            logger.info(f"📦 Payload ready. Sending to: {customer_phone}")
+            logger.info("📦 WhatsApp Payload: %s", json.dumps(payload, indent=2))
+            logger.info(f"📦 Payload ready. Sending template to: {customer_phone}")
             
             # Send request
             logger.info("⏳ Calling WhatsApp API...")
@@ -129,37 +176,12 @@ class BillCreateView(APIView):
             logger.error(f"Stack trace: {traceback.format_exc()}")
             return False
     
-    def _format_bill_message(self, bill, total_amount):
+    def _format_items_list(self, bill):
         """
-        Format bill details into WhatsApp message
+        Format items list for WhatsApp template parameter
         """
-        # Build items list
         items_text = ""
-        for item in bill.items.all():
-            item_total = item.quantity * item.price_per_unit
-            items_text += f"• {item.item_name} ({item.service}) - {item.quantity}x ₹{item.price_per_unit} = ₹{item_total}\n"
+        for index, item in enumerate(bill.items.all(), start=1):
+            items_text += f"{index}. {item.item_name} ({item.service}) — {item.quantity} × ₹{item.price_per_unit}\n"
         
-        message = f"""🎉 *Order Placed Successfully!*
-
-Dear Customer,
-
-Your order has been confirmed at *Bandbox Dry Cleaners*.
-
-📋 *Order Details:*
-🧾 Slip No: {bill.slip_no}
-📅 Date: {bill.date.strftime('%d-%b-%Y')}
-⏰ Due Date: {bill.due_date.strftime('%d-%b-%Y')}
-📍 Address: {bill.address}
-
-🛍️ *Items:*
-{items_text}
-💰 *Total Amount: ₹{total_amount}*
-
-Thank you for choosing Bandbox Dry Cleaners! We'll take great care of your clothes.
-
-For any queries, call us at: +91 77172 11141
-
----
-Bandbox Dry Cleaners"""
-        
-        return message
+        return items_text.strip()
