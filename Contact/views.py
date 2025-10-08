@@ -85,7 +85,7 @@ class ContactSubmitView(APIView):
                 "template": {
                     "name": template_name,
                     "language": {
-                        "code": "en"
+                        "code": "en_GB"
                     },
                     "components": [
                         {
