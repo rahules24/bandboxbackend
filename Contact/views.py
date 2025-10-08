@@ -52,20 +52,18 @@ class ContactSubmitView(APIView):
 
     def send_whatsapp_message(self, contact_data):
         """
-        Send contact form data via WhatsApp Business API
+        Send contact form data via WhatsApp Business API using template
         """
         try:
             # Get WhatsApp credentials from environment
             whatsapp_token = os.getenv('WHATSAPP_ACCESS_TOKEN')
             phone_number_id = os.getenv('WHATSAPP_PHONE_NUMBER_ID')
             recipient_number = os.getenv('WHATSAPP_RECIPIENT_NUMBER')  # Your receiving number
+            template_name = 'contact_query'
             
             if not all([whatsapp_token, phone_number_id, recipient_number]):
                 logger.error("WhatsApp credentials not configured in environment variables")
                 return False
-
-            # Format the message
-            message_text = self._format_message(contact_data)
             
             # WhatsApp Cloud API endpoint
             url = f"https://graph.facebook.com/v21.0/{phone_number_id}/messages"
@@ -79,15 +77,50 @@ class ContactSubmitView(APIView):
             # e.g., 919876543210 for India
             recipient = recipient_number.replace('+', '').replace('-', '').replace(' ', '')
             
+            # Construct template message payload (body only, 4 parameters)
             payload = {
                 "messaging_product": "whatsapp",
                 "to": recipient,
-                "type": "text",
-                "text": {
-                    "body": message_text
+                "type": "template",
+                "template": {
+                    "name": template_name,
+                    "language": {
+                        "code": "en"
+                    },
+                    "components": [
+                        {
+                            "type": "header",
+                            "parameters": [
+                                {
+                                    "type": "text",
+                                    "parameter_name": "subject",
+                                    "text": contact_data['subject']
+                                }
+                            ]
+                        },
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {
+                                    "type": "text",
+                                    "parameter_name": "name",
+                                    "text": contact_data['name']
+                                },
+                                {
+                                    "type": "text",
+                                    "parameter_name": "phone",
+                                    "text": contact_data['phone']
+                                },
+                                {
+                                    "type": "text",
+                                    "parameter_name": "message",
+                                    "text": contact_data['message']
+                                }
+                            ]
+                        }
+                    ]
                 }
             }
-            
             # Send request
             response = requests.post(url, json=payload, headers=headers, timeout=10)
             
@@ -101,20 +134,3 @@ class ContactSubmitView(APIView):
         except Exception as e:
             logger.error(f"Exception while sending WhatsApp message: {str(e)}")
             return False
-
-    def _format_message(self, contact_data):
-        """
-        Format contact form data into a readable WhatsApp message
-        """
-        message = f"""
-📝 *Name:* {contact_data['name']}
-📞 *Phone:* {contact_data['phone']}
-📋 *Subject:* {contact_data['subject']}
-
-💬 *Message:*
-{contact_data['message']}
-
----
-Sent from Bandbox Dry Cleaners Website"""
-        
-        return message

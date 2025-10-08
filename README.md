@@ -77,6 +77,83 @@ content-length: 0
   - ```-u username:password``` Sends credentials in base64 encoding.
 
 ---
+# Graph API
+### Meta's WhatsApp Business Account (WABA) API
+- Visit: [Graph API Explorer](https://developers.facebook.com/tools/explorer)
+### API Calls
+- Endpoints:
+  - ```"https://graph.facebook.com/v22.0/<PHONE_NUMBER_ID>/whatsapp_business_profile/"  -H "Authorization: Bearer <ACCESS_TOKEN>"```
+  - ```"https://graph.facebook.com/v22.0/<BUSINESS_ACCOUNT_ID>/message_templates" -H "Authorization: Bearer <ACCESS_TOKEN>"```
+
+- GET Requests
+  - ```metadata=1``` query returns a full metadata object that lists all the fields on the WhatsApp Business Phone Number.
+  
+      - ```curl "https://graph.facebook.com/v23.0/<PHONE_NUMBER_ID>?metadata=1" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"```
+
+      - ```curl "https://graph.facebook.com/v23.0/<WABA_ID>?metadata=1" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"```
+    
+      - ```curl "https://graph.facebook.com/v22.0/<PHONE_NUMBER_ID/whatsapp_business_profile?metadata=1" \ -H "Authorization: Bearer YOUR_ACCESS_TOKEN"```
+      
+        - **Output:** ```{"data":[{"messaging_product":"whatsapp"}]}```
+        - WhatsApp Business Profile object doesn’t expose a fields array through metadata=1
+
+  - You need to specify what fields you want to _get._ there ain't no '_get all_' or _'?fields=*'_ kinda endpoint: ```\user> curl -X GET "https://graph.facebook.com/v22.0/<PHONE_NUMBER_ID>/whatsapp_business_profile?fields=about,address,description,websites,vertical" -H "Authorization: Bearer <ACCESS_TOKEN>"```
+  - Save response in a json file:
+    ```
+    \user> curl -X GET "https://graph.facebook.com/v19.0/<PHONE_NUMBER_ID>/whatsapp_business_profile?fields=about,address,description,email,websites" `
+    -H "Authorization: Bearer <ACCESS_TOKEN>" `
+    -o "C:\path\to\response.json"
+    ```
+  - ```curl``` Flags
+    - ```-i``` includes the HTTP response headers in the output: ```curl -i -X GET "https://graph.facebook.com/v23.0/```
+      <img src="media/images/i_flag.png" width="75%" alt='the "i" flag in get request'>
+    - Saving Response in file:
+      - Save both headers and body separately: ```curl -D headers.txt -o body.json "URL"```
+      - Include headers in the same file as the body: ```curl -i -o full_response.txt "URL"```
+      - ```-o <file_name.ext>``` saves response body (only) to file.
+      - ```-D <file_name.ext>``` saves response headers (only) to file.
+
+- POST Requests
+  - ```{"messaging_product": "whatsapp"}``` The parameter messaging_product is required. You need to always send it in json while making a POST request.
+    ```
+    curl -X POST "https://graph.facebook.com/v19.0/<PHONE_NUMBER_ID>/whatsapp_business_profile" `
+    -H "Authorization: Bearer <TOKEN>"
+    -H "Content-Type: application/json"
+    -d '{"messaging_product": "whatsapp", "key1": "vlaue1", "key2": "vlaue2"}'
+    ```
+   
+  - Send json file as payload:
+    ```
+    \user> curl -X POST "https://graph.facebook.com/v19.0/<PHONE_NUMBER_ID>/whatsapp_business_profile" `
+    -H "Authorization: Bearer <ACCESS_TOKEN>" `
+    -H "Content-Type: application/json" `
+    -d (Get-Content -Raw -Path "C:\path\to\profile.json")
+    ```
+
+  - ```curl``` Flags
+      - ```-X``` tells curl which request method to use. It overrides HTTP method.
+        - By default, curl uses GET.
+          
+          <img src="media/images/X_flag.png" width="30%" alt='the "x" flag in curl'>
+      - ```-d``` | ```--data``` sends data in the body of the request.
+        
+            ```
+              curl -X POST https://api.example.com/items `
+              -H "Content-Type: application/json" `
+              -d '{"name": "Widget", "price": 9.99}'
+            ```
+      
+
+- Authentication
+    1. ```?access_token=<TOKEN>```: Sends the token as a query parameter in the URL.
+        - Example: ```https://graph.facebook.com/v23.0/833155156543248/message_history?access_token=EAA...```
+        - This is less secure, since URLs can be logged or cached in servers, browser history, etc.
+
+    2. ```-H "Authorization: Bearer <TOKEN>"```: Sends the token in an HTTP header, specifically the Authorization header.
+        - This is the recommended and more secure method, since the token is not exposed in the URL.
+
+
+---
 
 ## 📦 Tech Stack
 

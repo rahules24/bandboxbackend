@@ -70,10 +70,7 @@ class BillCreateView(APIView):
                 return False
             
             # Calculate total amount
-            total_amount = sum(
-                item.quantity * item.price_per_unit 
-                for item in bill.items.all()
-            )
+            total_amount = bill.amount
             logger.info(f"💰 Total amount calculated: ₹{total_amount}")
             
             # Format items list for template
@@ -146,7 +143,7 @@ class BillCreateView(APIView):
                                 {
                                     "type": "text",
                                     "parameter_name": "amount",
-                                    "text": str(total_amount) if total_amount else "0"
+                                    "text": str(total_amount)
                                 }
                             ]
                         }
