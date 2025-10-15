@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "bills",
     "Contact",
+    "whatsapp",  # WhatsApp webhook integration
     "rest_framework",
     "corsheaders",
 ]

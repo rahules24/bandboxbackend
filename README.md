@@ -185,6 +185,34 @@ bandboxbackend/
 - 🔐 Admin and staff login (customizable roles)
 - 🧩 Designed to connect with the React frontend via REST
 - 📱 WhatsApp notifications for contact form submissions
+- 💬 **WhatsApp Webhook Integration** - Receive and manage incoming WhatsApp messages
+
+---
+
+## 💬 WhatsApp Integration
+
+### Sending Messages (Already Configured)
+The Contact app sends WhatsApp messages via Facebook's Graph API when customers submit the contact form.
+
+### Receiving Messages (NEW!)
+The `whatsapp` app provides webhook integration to receive incoming WhatsApp messages.
+
+**Quick Start:**
+1. Add webhook credentials to `.env`
+2. Run migrations: `python manage.py migrate`
+3. Configure webhook in Meta Developer Console
+4. View messages in Django Admin Panel
+
+**Documentation:**
+- 📖 [Complete Setup Guide](whatsapp/SETUP_GUIDE.md) - Detailed step-by-step instructions
+- 🚀 [Quick Reference](whatsapp/README.md) - Quick commands and API reference
+- 📊 [Architecture Diagrams](whatsapp/ARCHITECTURE.md) - Visual flow diagrams
+- 📋 [Summary](whatsapp/SUMMARY.md) - Overview of what's included
+
+**Where to view incoming messages:**
+- Django Admin Panel: `https://your-app.fly.dev/admin/whatsapp/whatsappmessage/`
+- REST API: `GET /api/whatsapp/messages/`
+- Database: `whatsapp_whatsappmessage` table
 
 ---
 

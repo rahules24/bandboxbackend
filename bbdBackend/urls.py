@@ -23,6 +23,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/bills/', include('bills.urls')),
     path('api/contact/', include('Contact.urls')),
+    path('api/whatsapp/', include('whatsapp.urls')),  # WhatsApp webhook endpoints
     path('', lambda request: redirect('/api/bills/')),
 
 ]
