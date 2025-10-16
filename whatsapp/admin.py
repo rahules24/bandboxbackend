@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import WhatsAppMessage, WhatsAppMessageStatus, WhatsAppConversation
 
 
@@ -9,6 +10,7 @@ class WhatsAppMessageAdmin(admin.ModelAdmin):
         'from_name', 
         'message_type', 
         'text_preview',
+        'media_preview',
         'timestamp', 
         'status'
     ]
@@ -52,6 +54,26 @@ class WhatsAppMessageAdmin(admin.ModelAdmin):
         else:
             return f"[{obj.message_type}]"
     text_preview.short_description = 'Preview'
+    
+    def media_preview(self, obj):
+        """Display media preview with clickable link"""
+        if obj.media_url:
+            if obj.message_type == 'image':
+                return format_html(
+                    '<a href="{}" target="_blank">'
+                    '<img src="{}" style="max-width:100px; max-height:100px; border-radius:5px;" />'
+                    '</a>',
+                    obj.media_url,
+                    obj.media_url
+                )
+            elif obj.message_type in ['video', 'audio', 'document']:
+                return format_html(
+                    '<a href="{}" target="_blank">📎 View {}</a>',
+                    obj.media_url,
+                    obj.message_type.title()
+                )
+        return '-'
+    media_preview.short_description = 'Media'
 
 
 @admin.register(WhatsAppMessageStatus)

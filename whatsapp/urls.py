@@ -3,7 +3,8 @@ from .views import (
     WhatsAppWebhookView,
     MessagesListView,
     ConversationsListView,
-    MarkAsReadView
+    MarkAsReadView,
+    WhatsAppMediaProxyView
 )
 
 urlpatterns = [
@@ -14,4 +15,7 @@ urlpatterns = [
     path('messages/', MessagesListView.as_view(), name='messages-list'),
     path('conversations/', ConversationsListView.as_view(), name='conversations-list'),
     path('mark-read/', MarkAsReadView.as_view(), name='mark-read'),
+    
+    # Media proxy - serves WhatsApp media with authentication
+    path('media/<str:media_id>/', WhatsAppMediaProxyView.as_view(), name='whatsapp-media'),
 ]

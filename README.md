@@ -1,4 +1,3 @@
-
 # 🔧 Band Box Backend – Django REST API for Drycleaning App
 
 This is the **backend API** for the [Band Box Drycleaners](https://github.com/rahules24/bandboxdrycleaners) project. It manages orders, billing, and user authentication for a local dry cleaning business, built with **Django** and **Django REST Framework**, using **PostgreSQL** for data storage.
@@ -77,6 +76,98 @@ content-length: 0
   - ```-u username:password``` Sends credentials in base64 encoding.
 
 ---
+
+# WhatsApp Webhook Integration
+## Local Development
+1. Setup and connect Database ``` /user> docker start bandbox-db-container```
+2. Setup additional environment variables in `bandboxbackend/.env`
+    ```bash
+    # Webhook verification token (create your own random string)
+    WHATSAPP_WEBHOOK_VERIFY_TOKEN='generated_token'
+    
+    # https://developers.facebook.com/apps/ > BandBoxDrycleaners > App Settings > Basic
+    WHATSAPP_APP_SECRET='facebook_app_secret'
+    ```
+3. Start Django Server ```/bandboxbackend> python manage.py runserver```
+4. Execute ```/user> ngrok 8000``` in Terminal
+5. Copy generated Url ```https://your-ngrok-url.ngrok-free.app```
+
+## Production Deployment
+1. Set additional secrets on `Fly.io`
+    ```bash
+    # Set secrets
+    fly secrets set WHATSAPP_WEBHOOK_VERIFY_TOKEN='your_token'
+    fly secrets set WHATSAPP_APP_SECRET='your_secret'
+    
+    # Deploy
+    fly deploy
+    ```
+
+## Webhook Configuration:
+
+- `https://developers.facebook.com/apps/24763661953275059/whatsapp-business/wa-settings/?business_id=781047228053020`
+    - `24763661953275059` is the App ID
+    - `business_id=781047228053020` is the Business Account ID
+
+- Callback URL
+    - production: `https://bandboxbackend.fly.dev/api/whatsapp/webhook/`
+    - development: `https://your-ngrok-url.ngrok-free.app/api/whatsapp/webhook/`
+
+- Verify Token: Same as `WHATSAPP_WEBHOOK_VERIFY_TOKEN` in your `.env`
+
+- Subscribe to webhook fields: ✅Check `messages`
+
+## Testing
+Send a message to your WABA number and view in **Django Admin**
+### Production URLs
+- Admin: `https://bandboxbackend.fly.dev/admin/whatsapp/whatsappmessage/`
+- Media: `https://bandboxbackend.fly.dev/api/whatsapp/media/<media_id>/`
+
+### Development URLs
+- Admin: `http://127.0.0.1:8000/admin/whatsapp/whatsappmessage/`
+- Media: `https://127.0.0.1:8000/api/whatsapp/media/<media_id>/`
+
+---
+
+# Media Handling
+
+WhatsApp media files require authentication. Direct URLs like `http://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=1340436414194518&source=getMedia&ext=1760607832&hash=ARnqGceK-cVeK9lDu24DocuaNrk3qqx7L_pIKq8SO3Qmqw` can't be opened directly.
+```bash
+{
+  "title": "Authentication Error",
+  "detail": "Authentication Error",
+  "status": 401
+}
+```
+---
+
+## Media Proxy Solution
+
+The system uses a proxy endpoint that automatically handles authentication:
+
+1. **Database Storage:** Messages store a proxy URL: `/api/whatsapp/media/<media_id>/`
+
+2. **Authentication Process:**
+   - User clicks media link or thumbnail
+   - Django receives request at `/api/whatsapp/media/<media_id>/`
+   - Django adds `WHATSAPP_ACCESS_TOKEN` to request headers
+   - Fetches media from WhatsApp Graph API
+   - Serves the file directly to the browser
+
+## Limitations
+
+### WhatsApp API Limitations
+- **URL Expiration:** Media URLs expire after approximately 30 days
+- **No Voice Calls:** WABA API doesn't support voice/video calls
+- **Rate Limits:** API has rate limits for media downloads
+
+### Proxy Approach Trade-offs
+- **Performance:** Media loads on-demand (slower than cached files)
+- **Dependency:** Requires WhatsApp API availability
+- **Cost:** Each media view consumes API quota
+
+---
+
 # Graph API
 ### Meta's WhatsApp Business Account (WABA) API
 - Visit: [Graph API Explorer](https://developers.facebook.com/tools/explorer)
@@ -151,68 +242,6 @@ content-length: 0
 
     2. ```-H "Authorization: Bearer <TOKEN>"```: Sends the token in an HTTP header, specifically the Authorization header.
         - This is the recommended and more secure method, since the token is not exposed in the URL.
-
-
----
-
-## 📦 Tech Stack
-
-- **Framework:** Django, Django REST Framework (DRF)
-- **Database:** PostgreSQL
-- **Authentication:** Django's built-in auth system (with optional token/session support)
-- **API:** RESTful endpoints for orders, billing, and users
-- **Hosting:** [Fly.io](https://fly.io/)
-
----
-
-## 📁 Project Structure
-
-```
-bandboxbackend/
-├── bandbox/              # Django project config
-├── orders/               # Orders app (models, serializers, views)
-├── manage.py
-├── requirements.txt
-└── README.md
-```
-
----
-
-## 📌 Core Features
-
-- 🧾 Order creation and billing logic
-- 📊 API endpoints for managing services and pricing
-- 🔐 Admin and staff login (customizable roles)
-- 🧩 Designed to connect with the React frontend via REST
-- 📱 WhatsApp notifications for contact form submissions
-- 💬 **WhatsApp Webhook Integration** - Receive and manage incoming WhatsApp messages
-
----
-
-## 💬 WhatsApp Integration
-
-### Sending Messages (Already Configured)
-The Contact app sends WhatsApp messages via Facebook's Graph API when customers submit the contact form.
-
-### Receiving Messages (NEW!)
-The `whatsapp` app provides webhook integration to receive incoming WhatsApp messages.
-
-**Quick Start:**
-1. Add webhook credentials to `.env`
-2. Run migrations: `python manage.py migrate`
-3. Configure webhook in Meta Developer Console
-4. View messages in Django Admin Panel
-
-**Documentation:**
-- 📖 [Complete Setup Guide](whatsapp/SETUP_GUIDE.md) - Detailed step-by-step instructions
-- 🚀 [Quick Reference](whatsapp/README.md) - Quick commands and API reference
-- 📊 [Architecture Diagrams](whatsapp/ARCHITECTURE.md) - Visual flow diagrams
-- 📋 [Summary](whatsapp/SUMMARY.md) - Overview of what's included
-
-**Where to view incoming messages:**
-- Django Admin Panel: `https://your-app.fly.dev/admin/whatsapp/whatsappmessage/`
-- REST API: `GET /api/whatsapp/messages/`
-- Database: `whatsapp_whatsappmessage` table
 
 ---
 

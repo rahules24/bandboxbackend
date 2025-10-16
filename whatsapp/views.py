@@ -261,31 +261,44 @@ class WhatsAppWebhookView(APIView):
     
     def _download_media(self, media_id, message_obj):
         """
-        Download media file from WhatsApp
+        Store media_id and create proxy URL for viewing
+        No need to download - we'll proxy it on-demand
         """
         try:
-            access_token = os.getenv('WHATSAPP_ACCESS_TOKEN')
-            
-            # Get media URL
-            url = f'https://graph.facebook.com/v21.0/{media_id}'
-            headers = {'Authorization': f'Bearer {access_token}'}
-            
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                media_data = response.json()
-                media_url = media_data.get('url')
-                
-                # Download the actual file
-                media_response = requests.get(media_url, headers=headers)
-                if media_response.status_code == 200:
-                    # Save to media folder or cloud storage
-                    # For now, just save the URL
-                    message_obj.media_url = media_url
-                    message_obj.save()
-                    logger.info(f'Downloaded media {media_id}')
+            # Just save a proxy URL that will fetch media when accessed
+            # This works for both local and production!
+            message_obj.media_url = f'/api/whatsapp/media/{media_id}/'
+            message_obj.save()
+            logger.info(f'Saved media proxy URL for {media_id}')
+            return True
             
         except Exception as e:
-            logger.error(f'Error downloading media: {str(e)}')
+            logger.error(f'Error saving media URL: {str(e)}')
+            return False
+    
+    def _get_file_extension(self, mime_type):
+        """
+        Get file extension from MIME type
+        """
+        mime_map = {
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp',
+            'video/mp4': '.mp4',
+            'video/3gpp': '.3gp',
+            'audio/ogg': '.ogg',
+            'audio/mpeg': '.mp3',
+            'audio/amr': '.amr',
+            'application/pdf': '.pdf',
+            'application/vnd.ms-powerpoint': '.ppt',
+            'application/msword': '.doc',
+            'application/vnd.ms-excel': '.xls',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+        }
+        return mime_map.get(mime_type, '.bin')
     
     def _send_auto_reply(self, to_number, message_type):
         """
@@ -371,3 +384,82 @@ class MarkAsReadView(APIView):
                 {'error': 'Conversation not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class WhatsAppMediaProxyView(APIView):
+    """
+    Proxy view to serve WhatsApp media files with authentication
+    Usage: /api/whatsapp/media/<media_id>/
+    """
+    authentication_classes = []  # No auth required for this endpoint
+    permission_classes = []
+    
+    def get(self, request, media_id):
+        """
+        Fetch media from WhatsApp and serve it with proper authentication
+        """
+        try:
+            access_token = os.getenv('WHATSAPP_ACCESS_TOKEN')
+            
+            # Step 1: Get the media URL from WhatsApp
+            url = f'https://graph.facebook.com/v21.0/{media_id}'
+            headers = {'Authorization': f'Bearer {access_token}'}
+            
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code != 200:
+                return Response(
+                    {'error': 'Media not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            media_data = response.json()
+            media_url = media_data.get('url')
+            mime_type = media_data.get('mime_type', 'application/octet-stream')
+            
+            if not media_url:
+                return Response(
+                    {'error': 'Media URL not available'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Step 2: Download the actual media file with authentication
+            media_response = requests.get(media_url, headers=headers)
+            
+            if media_response.status_code != 200:
+                return Response(
+                    {'error': 'Failed to download media'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Step 3: Serve the file directly to the browser
+            from django.http import HttpResponse
+            
+            response = HttpResponse(media_response.content, content_type=mime_type)
+            
+            # Set filename for download
+            filename = f"{media_id}{self._get_extension(mime_type)}"
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f'Error serving media: {str(e)}')
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def _get_extension(self, mime_type):
+        """Get file extension from MIME type"""
+        mime_map = {
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp',
+            'video/mp4': '.mp4',
+            'audio/ogg': '.ogg',
+            'audio/mpeg': '.mp3',
+            'application/pdf': '.pdf',
+        }
+        return mime_map.get(mime_type, '')
